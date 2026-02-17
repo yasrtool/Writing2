@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Writing Final Exam - 50 Questions</title>
+    <style>
+        :root { --primary: #2563eb; --success: #059669; --error: #dc2626; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; min-height: 80vh; }
+        .quiz-header { background: var(--primary); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .nav-panel { background: #f1f5f9; padding: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(35px, 1fr)); gap: 8px; border-bottom: 1px solid #e2e8f0; }
+        .nav-btn { width: 35px; height: 35px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .nav-btn.active { border-color: var(--primary); background: #dbeafe; color: var(--primary); font-weight: bold; }
+        .nav-btn.answered { background: var(--success); color: white; border: none; }
+        .content { padding: 30px; flex-grow: 1; }
+        .question-box { display: none; }
+        .question-box.active { display: block; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        h3 { margin-top: 0; color: #1e293b; line-height: 1.5; }
+        .options { margin-top: 20px; }
+        .option-label { display: flex; align-items: center; padding: 12px 15px; margin-bottom: 10px; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .option-label:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .option-label input { margin-right: 15px; width: 18px; height: 18px; cursor: pointer; }
+        .option-label.selected { border-color: var(--primary); background: #eff6ff; }
+        .controls { padding: 20px; background: #fff; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; }
+        button { padding: 10px 25px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .btn-prev { background: #94a3b8; color: white; }
+        .btn-next { background: var(--primary); color: white; }
+        .btn-submit { background: var(--success); color: white; }
+        .btn-hidden { visibility: hidden; }
+        .result-screen { text-align: center; padding: 40px; }
+        .score-circle { width: 120px; height: 120px; border-radius: 50%; border: 8px solid var(--primary); display: flex; align-items: center; justify-content: center; margin: 20px auto; font-size: 24px; font-weight: bold; }
+        .review-item { text-align: left; padding: 15px; margin-bottom: 15px; border-radius: 8px; background: #fff1f2; border-left: 5px solid var(--error); }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="login-container">
+    <div style="padding: 40px; text-align: center;">
+        <h2>Writing Skills Final Exam</h2>
+        <p>Please enter your name to start the 50-question test</p>
+        <input type="text" id="userName" style="padding: 12px; width: 80%; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 20px;" placeholder="Full Name">
+        <button class="btn-next" style="width: 80%;" onclick="startQuiz()">Start Exam</button>
+    </div>
+</div>
+
+<div class="container hidden" id="quiz-container">
+    <div class="quiz-header">
+        <span id="display-name"></span>
+        <div id="timer">Time Elapsed: 00:00</div>
+    </div>
+    <div class="nav-panel" id="nav-panel"></div>
+    <div class="content" id="questions-area"></div>
+    <div class="controls">
+        <button class="btn-prev" id="prevBtn" onclick="changeQuestion(-1)">Previous</button>
+        <button class="btn-next" id="nextBtn" onclick="changeQuestion(1)">Next</button>
+        <button class="btn-submit hidden" id="submitBtn" onclick="finishQuiz()">Submit Exam</button>
+    </div>
+</div>
+
+<div class="container hidden" id="result-container">
+    <div class="result-screen">
+        <h2>Exam Completed</h2>
+        <div class="score-circle" id="score-circle"></div>
+        <div id="review-area"></div>
+        <button class="btn-next" onclick="location.reload()">Restart</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        // Group 1
+        { q: "What is Academic Writing?", a: ["Personal writing for family", "Writing used in high school and college", "Informal creative stories"], c: 1 },
+        { q: "Which of the following is NOT allowed in academic writing?", a: ["Complete sentences", "Slang and contractions", "Clear organization"], c: 1 },
+        { q: "A paragraph is defined as a group of related sentences that develops:", a: ["Two main ideas", "One main idea", "Different subjects"], c: 1 },
+        { q: "What are the three essential parts of a paragraph?", a: ["Heading, Body, Ending", "Topic sentence, Supporting sentences, Concluding sentence", "Intro, Middle, Outro"], c: 1 },
+        { q: "The 'Controlling Idea' in a topic sentence:", a: ["Repeats the topic", "Limits the topic to a specific point", "Ends the paragraph"], c: 1 },
+        { q: "Where is the topic sentence usually placed for best clarity?", a: ["At the end", "In the middle", "At the beginning"], c: 2 },
+        { q: "Supporting sentences are responsible for:", a: ["Adding new topics", "Giving details and info about the controlling idea", "Writing the summary"], c: 1 },
+        { q: "Which technique involves writing without stopping to generate ideas?", a: ["Listing", "Freewriting", "Drafting"], c: 1 },
+        { q: "What is the primary purpose of Narration?", a: ["To describe an object", "To tell a story in chronological order", "To argue a point"], c: 1 },
+        { q: "Time order signals such as 'Finally' or 'Later' signal:", a: ["Spatial arrangement", "The order in which events happen", "A summary"], c: 1 },
+        { q: "A Compound Sentence is formed by:", a: ["One subject-verb pair", "Two or more simple sentences joined correctly", "A group of words without a verb"], c: 1 },
+        { q: "Which coordinating conjunction joins sentences that show contrast?", a: ["And", "But", "So"], c: 1 },
+        { q: "What is a 'Fragment' in sentence structure?", a: ["A perfect sentence", "An incomplete sentence missing a subject or verb", "A run-on"], c: 1 },
+        { q: "Descriptive writing primarily uses 'word pictures' to appeal to:", a: ["Logic", "The senses (sight, sound, etc.)", "Statistics"], c: 1 },
+        { q: "Spatial Order is used in description to organize items by:", a: ["Time", "Space and position", "Importance"], c: 1 },
+        { q: "What does 'Unity' in a paragraph mean?", a: ["Mixing many ideas", "All sentences focus on one main idea", "Using many adjectives"], c: 1 },
+        { q: "The 'Clustering' technique starts with:", a: ["Writing a list", "Writing the topic in a circle in the middle", "Writing a draft"], c: 1 },
+        { q: "Logical Division of Ideas divides a topic into points to discuss them:", a: ["All at once", "Separately", "Randomly"], c: 1 },
+        { q: "What makes a paragraph 'Coherent'?", a: ["Sudden jumps between ideas", "Smooth flow from beginning to end", "Very short sentences"], c: 1 },
+        { q: "A 'Run-on' error occurs when:", a: ["A sentence is too long", "Two sentences are joined with no comma or connector", "The verb is missing"], c: 1 },
+        { q: "A 'Comma Splice' happens when you join two sentences with:", a: ["A period", "A comma alone", "A coordinating conjunction"], c: 1 },
+        { q: "Transition signals like 'Furthermore' are used to:", a: ["Show contrast", "Add a similar idea", "Show result"], c: 1 },
+        { q: "Making an 'Outline' before writing helps to:", a: ["Waste time", "Organize thoughts and not leave out info", "Avoid using a pen"], c: 1 },
+        { q: "A 'Summary' should always be written in:", a: ["The original author's words", "Your own words", "Incomplete sentences"], c: 1 },
+        { q: "To achieve coherence, you should use nouns and pronouns:", a: ["Inconsistently", "Consistently throughout", "Only once"], c: 1 },
+        
+        // Group 2
+        { q: "Academic writing is formal, so you should NOT use:", a: ["Nouns", "Slang or contractions", "Complete sentences"], c: 1 },
+        { q: "Which of these is NOT capitalized according to English rules?", a: ["The pronoun 'I'", "Proper nouns", "Names of seasons"], c: 2 },
+        { q: "A simple sentence must express a:", a: ["Question", "Complete thought", "Fragment"], c: 1 },
+        { q: "In subject-verb agreement, the word 'Both' is always:", a: ["Singular", "Plural", "Either"], c: 1 },
+        { q: "The first step of the writing process is:", a: ["Organizing", "Prewriting", "Drafting"], c: 1 },
+        { q: "A 'Comma Splice' is a sentence error where you join two sentences with:", a: ["A period", "A comma alone", "A semicolon"], c: 1 },
+        { q: "The conjunction 'So' joins sentences when the second expresses a:", a: ["Contrast", "Result", "Choice"], c: 1 },
+        { q: "Transition signals are like ___ because they tell the reader when to stop or slow down:", a: ["Food", "Traffic signals", "Music"], c: 1 },
+        { q: "The prewriting technique 'Listing' involves making a list of:", a: ["Grammar rules", "Words or phrases that come into your mind", "Correct sentences"], c: 1 },
+        { q: "A paragraph is like a sandwich. The Topic and Concluding sentences are the:", a: ["Meat", "Bread", "Lettuce"], c: 1 },
+        { q: "In a compound sentence, you place a comma ___ the coordinating conjunction:", a: ["After", "Before", "Inside"], c: 1 },
+        { q: "The signal 'On the other hand' tells the reader to look for a/an:", a: ["Similar idea", "Opposite or contrasting idea", "Example"], c: 1 },
+        { q: "The apostrophe is used to show where letters are missing in a:", a: ["Proper noun", "Contraction", "Incomplete sentence"], c: 1 },
+        { q: "Spatial order organizes a description by moving through:", a: ["Time", "Space and position", "Alphabetical order"], c: 1 },
+        { q: "A good topic sentence is neither too ___ nor too ___:", a: ["Long / Short", "General / Specific", "Old / New"], c: 1 },
+        { q: "The main goal in freewriting is to:", a: ["Check punctuation", "Keep writing all your words without stopping", "Draw circles"], c: 1 },
+        { q: "A summary is a short retelling in:", a: ["The original sentences", "Your own words", "Informal slang"], c: 1 },
+        { q: "Coherence means that one sentence leads ___ to the next one:", a: ["Suddenly", "Naturally", "Randomly"], c: 1 },
+        { q: "The signal phrase 'Such as' should be used ___ a comma:", a: ["With", "Without", "Always after"], c: 1 },
+        { q: "In a paragraph sandwich, the supporting sentences represent the:", a: ["Bread", "Meat", "Plate"], c: 1 },
+        { q: "When you cluster, you start by writing the topic in a circle in the:", a: ["Bottom", "Middle", "Corner"], c: 1 },
+        { q: "The third step of the writing process is writing a:", a: ["Outline", "Rough draft", "Final copy"], c: 1 },
+        { q: "The coordinating conjunction 'Or' joins sentences that give:", a: ["Results", "Choices or alternatives", "Opposite ideas"], c: 1 },
+        { q: "The transition signal 'Furthermore' tells the reader to look for another:", a: ["Contrasting idea", "Similar idea", "Concluding idea"], c: 1 },
+        { q: "Unity means that a paragraph discusses only ___ main idea:", a: ["Two", "One", "Three"], c: 1 }
+    ];
+
+    let currentIdx = 0;
+    let userAnswers = new Array(questions.length).fill(null);
+    let startTime;
+    let timerInt;
+
+    function startQuiz() {
+        const name = document.getElementById('userName').value;
+        if (!name) return alert("Please enter your name");
+        document.getElementById('display-name').innerText = "Student: " + name;
+        document.getElementById('login-container').classList.add('hidden');
+        document.getElementById('quiz-container').classList.remove('hidden');
+        initNav();
+        renderQuestions();
+        showQuestion(0);
+        startTimer();
+    }
+
+    function initNav() {
+        const panel = document.getElementById('nav-panel');
+        panel.innerHTML = "";
+        questions.forEach((_, i) => {
+            panel.innerHTML += `<button class="nav-btn" id="nav-${i}" onclick="showQuestion(${i})">${i+1}</button>`;
+        });
+    }
+
+    function renderQuestions() {
+        const area = document.getElementById('questions-area');
+        area.innerHTML = "";
+        questions.forEach((item, i) => {
+            area.innerHTML += `
+                <div class="question-box" id="q-box-${i}">
+                    <h3>${i+1}. ${item.q}</h3>
+                    <div class="options">
+                        ${item.a.map((opt, idx) => `
+                            <label class="option-label" id="label-${i}-${idx}">
+                                <input type="radio" name="q${i}" value="${idx}" onchange="selectOption(${i}, ${idx})"> ${opt}
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>`;
+        });
+    }
+
+    function showQuestion(idx) {
+        document.querySelectorAll('.question-box').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`q-box-${idx}`).classList.add('active');
+        document.getElementById(`nav-${idx}`).classList.add('active');
+        currentIdx = idx;
+        document.getElementById('prevBtn').classList.toggle('btn-hidden', idx === 0);
+        const isLast = idx === questions.length - 1;
+        document.getElementById('nextBtn').classList.toggle('hidden', isLast);
+        document.getElementById('submitBtn').classList.toggle('hidden', !isLast);
+    }
+
+    function selectOption(qIdx, optIdx) {
+        userAnswers[qIdx] = optIdx;
+        document.querySelectorAll(`#q-box-${qIdx} .option-label`).forEach(l => l.classList.remove('selected'));
+        document.getElementById(`label-${qIdx}-${optIdx}`).classList.add('selected');
+        document.getElementById(`nav-${qIdx}`).classList.add('answered');
+    }
+
+    function changeQuestion(step) {
+        showQuestion(currentIdx + step);
+    }
+
+    function startTimer() {
+        startTime = Date.now();
+        timerInt = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const s = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById('timer').innerText = `Time: ${m}:${s}`;
+        }, 1000);
+    }
+
+    function finishQuiz() {
+        clearInterval(timerInt);
+        let score = 0;
+        let reviewHtml = "<h3>Review Wrong Answers:</h3>";
+        questions.forEach((item, i) => {
+            if (userAnswers[i] == item.c) score++;
+            else {
+                reviewHtml += `<div class="review-item">
+                    <strong>Q${i+1}:</strong> ${item.q}<br>
+                    <span style="color:var(--error)">Your answer: ${userAnswers[i] !== null ? item.a[userAnswers[i]] : 'None'}</span><br>
+                    <span style="color:var(--success)">Correct: ${item.a[item.c]}</span>
+                </div>`;
+            }
+        });
+        document.getElementById('quiz-container').classList.add('hidden');
+        document.getElementById('result-container').classList.remove('hidden');
+        document.getElementById('score-circle').innerText = `${score}/${questions.length}`;
+        document.getElementById('review-area').innerHTML = score === questions.length ? "Perfect Score! Well done." : reviewHtml;
+    }
+</script>
+</body>
+</html>
